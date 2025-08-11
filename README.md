@@ -72,3 +72,60 @@ pip install -r requirements.txt
 3.  **Save and Convert**:
       * Click **"Save Settings"** to encrypt and save your paths and credentials for future use.
       * Click **"Convert to Markdown"** to start the process. The log window will show the progress.
+
+## Diagram
+``` mermaid
+graph TD
+    subgraph App Initialization
+        A["Start (__main__)"] --> B{Check Dependencies};
+        B -- Dependencies OK --> C[create_gui];
+        B -- Missing --> D[Show Error & Exit];
+    end
+
+    subgraph GUI & User Interaction
+        C --> E["Initialize Tkinter Window & Widgets"];
+        E --> F[load_config on Startup];
+        F --> G["Display GUI & Wait for User"];
+        G -- Clicks 'Convert' --> H[start_conversion];
+        G -- Clicks 'Save Settings' --> I[save_config];
+    end
+
+    subgraph Configuration Handling
+        I --> I1[load_key];
+        I1 --> I2[Encrypt secrets];
+        I2 --> I3["Write to config.ini"];
+        I3 --> I4[Show Success Message];
+
+        F --> F1[load_key];
+        F1 --> F2["Read config.ini"];
+        F2 --> F3[Decrypt secrets];
+        F3 --> F4[Populate GUI fields];
+    end
+
+    subgraph Conversion Workflow
+        H --> J{Validate UI Inputs};
+        J -- Inputs Valid --> K["Create & Start Thread (run_conversion_logic)"];
+        J -- Inputs Invalid --> L[Show Error Message];
+        
+        K --> M[run_conversion_logic];
+        M --> N{File Type is PDF?};
+        
+        N -- Yes --> O["Convert via Markitdown (Azure Doc Intel)"];
+        N -- No --> P["Convert via Pandoc (Subprocess)"];
+        
+        O --> Q[Common Post-Processing];
+        P --> Q;
+        
+        Q["- Move media files<br>- Fix image paths (Regex)"] --> R{AI Post-Processing Enabled?};
+        
+        R -- Yes --> S[post_process_with_ai];
+        S --> T["Send content to Azure OpenAI API"];
+        T --> U["Overwrite file with AI response"];
+        U --> V[Conversion Complete];
+        
+        R -- No --> V;
+
+        M -- Updates throughout --> W["Update Log Widget in GUI"];
+        V --> W;
+    end
+```
